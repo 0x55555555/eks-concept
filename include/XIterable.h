@@ -19,28 +19,19 @@ public:
       {
       struct
         {
-        void (*begin)(void *ths, IteratorData *it);
-        void (*end)(void *ths, IteratorData *it);
-        void (*copy)(void *ths, IteratorData *it, const IteratorData *src);
-        void (*destroy)(void *ths, IteratorData *it);
-        void (*increment)(void *ths, IteratorData *it);
-        El &(*get)(void *ths, IteratorData *it);
-        bool (*equal)(void *ths, const IteratorData *a, const IteratorData *b);
+        void (*begin)(const detail::ObjectWrapper &ths, IteratorData *it);
+        void (*end)(const detail::ObjectWrapper &ths, IteratorData *it);
+        void (*copy)(const detail::ObjectWrapper &ths, IteratorData *it, const IteratorData *src);
+        void (*destroy)(const detail::ObjectWrapper &ths, IteratorData *it);
+        void (*increment)(const detail::ObjectWrapper &ths, IteratorData *it);
+        El &(*get)(const detail::ObjectWrapper &ths, IteratorData *it);
+        bool (*equal)(const detail::ObjectWrapper &ths, const IteratorData *a, const IteratorData *b);
         } iterable;
 
-      template <typename Type, typename Impl> void init()
-        {
-        iterable.begin = (decltype(iterable.begin))Impl::template begin<Type>;
-        iterable.end = (decltype(iterable.end))Impl::template end<Type>;
-        iterable.copy = (decltype(iterable.copy))Impl::template copy<Type>;
-        iterable.destroy = (decltype(iterable.destroy))Impl::template destroy<Type>;
-        iterable.increment = (decltype(iterable.increment))Impl::template increment<Type>;
-        iterable.get = (decltype(iterable.get))Impl::template get<Type>;
-        iterable.equal = (decltype(iterable.equal))Impl::template equal<Type>;
-        }
+      X_TRAIT_FUNCTION_IMPL(iterable, begin, end, copy, destroy, increment, get, equal);
       };
 
-    X_TRAIT_IMPL(Trait, Derived)
+    X_TRAIT_IMPL
 
   public:
     class ConstIterator
@@ -122,37 +113,37 @@ public:
 
   struct StdInterface
     {
-    template <typename T> static void begin(T *ths, IteratorData *it)
+    template <typename T> static void begin(const detail::ObjectWrapper &ths, IteratorData *it)
       {
-      it->create<typename T::iterator>(ths->begin());
+      it->create<typename T::iterator>(ths.as<T>()->begin());
       }
 
-    template <typename T> static void end(T *ths, IteratorData *it)
+    template <typename T> static void end(const detail::ObjectWrapper &ths, IteratorData *it)
       {
-      it->create<typename T::iterator>(ths->end());
+      it->create<typename T::iterator>(ths.as<T>()->end());
       }
 
-    template <typename T> static void copy(T *, IteratorData *it, const IteratorData *src)
+    template <typename T> static void copy(const detail::ObjectWrapper &, IteratorData *it, const IteratorData *src)
       {
       it->create<typename T::iterator>(*src->data<typename T::iterator>());
       }
 
-    template <typename T> static void destroy(T *, IteratorData *it)
+    template <typename T> static void destroy(const detail::ObjectWrapper &, IteratorData *it)
       {
       it->destroy<typename T::iterator>();
       }
 
-    template <typename T> static void increment(T *, IteratorData *it)
+    template <typename T> static void increment(const detail::ObjectWrapper &, IteratorData *it)
       {
       ++(*it->data<typename T::iterator>());
       }
 
-    template <typename T> static El &get(T *, IteratorData *it)
+    template <typename T> static El &get(const detail::ObjectWrapper &, IteratorData *it)
       {
       return **it->data<typename T::iterator>();
       }
 
-    template <typename T> static bool equal(T *, const IteratorData *a, const IteratorData *b)
+    template <typename T> static bool equal(const detail::ObjectWrapper &, const IteratorData *a, const IteratorData *b)
       {
       return *a->data<typename T::iterator>() == *b->data<typename T::iterator>();
       }

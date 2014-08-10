@@ -5,36 +5,48 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>D04E49D5-37FB-4DB1-B503-1CFBE8712E20</string>
+	<string>BB2FED9E-E39A-4F24-80B9-1324F8CE52A5</string>
 	<key>IDESourceControlProjectName</key>
 	<string>test</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>6A4D149C-F486-4CC9-B0DA-8BF2B8DEA100</key>
+		<key>7F88AE98-E48D-4B4A-A303-A8352C0EF8FA</key>
+		<string>ssh://github.com/jorj1988/eks-concept.git</string>
+		<key>E8C9C638-FA40-47E9-A82D-5CCE8AED9125</key>
 		<string>ssh://github.com/jorj1988/Eks.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>EksConcept/test/test.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>6A4D149C-F486-4CC9-B0DA-8BF2B8DEA100</key>
+		<key>7F88AE98-E48D-4B4A-A303-A8352C0EF8FA</key>
+		<string>../../..</string>
+		<key>E8C9C638-FA40-47E9-A82D-5CCE8AED9125</key>
 		<string>../../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>ssh://github.com/jorj1988/Eks.git</string>
+	<string>ssh://github.com/jorj1988/eks-concept.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>110</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>6A4D149C-F486-4CC9-B0DA-8BF2B8DEA100</string>
+	<string>E8C9C638-FA40-47E9-A82D-5CCE8AED9125</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>6A4D149C-F486-4CC9-B0DA-8BF2B8DEA100</string>
+			<string>E8C9C638-FA40-47E9-A82D-5CCE8AED9125</string>
 			<key>IDESourceControlWCCName</key>
 			<string>Eks</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>7F88AE98-E48D-4B4A-A303-A8352C0EF8FA</string>
+			<key>IDESourceControlWCCName</key>
+			<string>EksConcept</string>
 		</dict>
 	</array>
 </dict>

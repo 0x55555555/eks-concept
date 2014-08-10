@@ -1,6 +1,7 @@
 #pragma once
 #include "Utilities/XTightPointer.h"
 #include "Utilities/XPrivateImpl.h"
+#include "Utilities/XMacroHelpers.h"
 
 namespace Eks
 {
@@ -11,30 +12,34 @@ namespace Trait
 namespace detail
 {
 
-#define X_TRAIT_IMPL(CLS, DERIVED) protected: \
-  DERIVED* derived() { return static_cast<Derived*>(this); } \
-  const DERIVED* derived() const { return static_cast<const Derived*>(this); } \
+#define X_TRAIT_IMPL protected: \
+  Derived* derived() { return static_cast<Derived*>(this); } \
+  const Derived* derived() const { return static_cast<const Derived*>(this); } \
   detail::PrivateData *data() { return derived()->data(); } \
   const detail::PrivateData *data() const { return derived()->data(); } \
-  const CLS::Functions *functions() const { return derived()->functions(); }
+  const Trait::Functions *functions() const { return derived()->functions(); }
+
+
+#define X_TRAIT_FUNCTION_IMPL_FN(variable, name, n) name.variable = Impl::template variable<Type>;
+#define X_TRAIT_FUNCTION_IMPL(name, ...) \
+template <typename Type, typename Impl> void init() { \
+  X_EXPAND_ARGS(X_TRAIT_FUNCTION_IMPL_FN, name, __VA_ARGS__) }
 
 typedef PrivateImpl<sizeof(void*)*4> PrivateData;
 
-template <typename Derived,
-          template <typename D1> class Trait1,
-          template <typename D> class... Traits>
+template <typename Derived, typename Trait1, typename... Traits>
   class BaseObject
-    : public Trait1<Derived>,
+    : public Trait1::template Trait<Derived>,
       public BaseObject<Derived, Traits...>
   {
 public:
   struct Functions
-      : public Trait1<Derived>::Functions,
+      : public Trait1::template Trait<Derived>::Functions,
         public BaseObject<Derived, Traits...>::Functions
     {
     template <typename Type, typename Trait1Impl, typename... TraitsImpl> void init()
       {
-      Trait1<Derived>::Functions::template init<Type, Trait1Impl>();
+      Trait1::template Trait<Derived>::Functions::template init<Type, Trait1Impl>();
 
       typedef BaseObject<Derived, Traits...> Base;
       Base::Functions::template init<Type, TraitsImpl...>();
@@ -43,29 +48,52 @@ public:
 
   };
 
-template <typename Derived,
-          template <typename D1> class Trait>
+template <typename Derived, typename Trait>
   class BaseObject<Derived, Trait>
-    : public Trait<Derived>
+    : public Trait::template Trait<Derived>
   {
 public:
   struct Functions
-      : public Trait<Derived>::Functions
+      : public Trait::template Trait<Derived>::Functions
     {
     template <typename Type, typename TraitImpl> void init()
       {
-      Trait<Derived>::Functions::template init<Type, TraitImpl>();
+      Trait::template Trait<Derived>::Functions::template init<Type, TraitImpl>();
       }
     };
 
   };
 
+// A wrapper for returning const object memory for casting.
+class ConstObjectWrapper
+  {
+public:
+  ConstObjectWrapper(const void *mem) : _mem(const_cast<void *>(mem)) { }
+  template <typename T>const T *as() const
+    {
+    return static_cast<T *>(_mem);
+    }
+
+protected:
+  void *_mem;
+  };
+
+// A wrapper for returning object memory for casting.
+class ObjectWrapper : public ConstObjectWrapper
+  {
+public:
+  ObjectWrapper(void *mem) : ConstObjectWrapper(mem) { }
+  template <typename T>T *as() const
+    {
+    return static_cast<T *>(ConstObjectWrapper::_mem);
+    }
+  };
 }
 
-template <template <typename D> class... Traits>
-    class Object : public detail::BaseObject<Object<Traits...>, Traits...>
+template <typename Holder, typename... Traits>
+    class Object : public detail::BaseObject<Object<Holder, Traits...>, Holder, Traits...>
   {
-  typedef detail::BaseObject<Object<Traits...>, Traits...> Base;
+  typedef detail::BaseObject<Object<Holder, Traits...>, Holder, Traits...> Base;
   typedef typename Base::Functions Functions;
 
 public:
@@ -80,10 +108,20 @@ public:
     Base::clear();
     }
 
-  template <typename Type, typename... TraitsImpl> void init()
+  template <typename Type, typename... TraitsImpl> void init(const Type& t)
     {
     static const Functions fn = buildFunctions<Type, TraitsImpl...>();
     _functions = &fn;
+
+    Base::assign(t);
+    }
+
+  template <typename Type, typename... TraitsImpl> void init(const Object<Holder, Traits...>& t)
+    {
+    static const Functions fn = buildFunctions<Type, TraitsImpl...>();
+    _functions = &fn;
+
+    Base::assignObject(t);
     }
 
   const Functions *functions() const { return _functions; }

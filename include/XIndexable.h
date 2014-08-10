@@ -18,18 +18,14 @@ public:
       {
       struct
         {
-        El &(*at)(void *ths, xsize i);
-        xsize (*size)(const void *ths);
+        El &(*at)(const detail::ObjectWrapper &ths, xsize i);
+        xsize (*size)(const detail::ConstObjectWrapper &ths);
         } indexable;
 
-      template <typename Type, typename Impl> void init()
-        {
-        indexable.at = (decltype(indexable.at))Impl::template at<Type>;
-        indexable.size = (decltype(indexable.size))Impl::template size<Type>;
-        }
+      X_TRAIT_FUNCTION_IMPL(indexable, at, size);
       };
 
-    X_TRAIT_IMPL(Trait, Derived)
+    X_TRAIT_IMPL
 
   public:
     El &at(xsize i)
@@ -39,7 +35,7 @@ public:
 
     const El &at(xsize i) const
       {
-      return functions()->indexable.at(const_cast<void *>(derived()->object()), i);
+      return functions()->indexable.at(const_cast<Derived*>(derived())->object(), i);
       }
 
     El &operator[](xsize i)
@@ -54,20 +50,20 @@ public:
 
     xsize size() const
       {
-      return functions()->indexable.size(const_cast<void *>(derived()->object()));
+      return functions()->indexable.size(derived()->object());
       }
     };
 
   struct StdInterface
     {
-    template <typename T> static El &at(T *ths, xsize i)
+    template <typename T> static El &at(const detail::ObjectWrapper &ths, xsize i)
       {
-      return (*ths)[i];
+      return (*ths.as<T>())[i];
       }
 
-    template <typename T> static xsize size(T *ths)
+    template <typename T> static xsize size(const detail::ConstObjectWrapper &ths)
       {
-      return ths->size();
+      return ths.as<T>()->size();
       }
     };
 

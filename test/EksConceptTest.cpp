@@ -5,6 +5,7 @@
 #include "XIterable.h"
 #include "XIndexable.h"
 #include "XDestroyable.h"
+#include "XReferenced.h"
 
 class EksConceptTest : public QObject
   {
@@ -15,6 +16,8 @@ private Q_SLOTS:
   void destroyableCopyTest();
   void iterableTest();
   void indexableTest();
+  void defaultTraitsTest();
+  void customTest();
   };
 
 struct DestroyTest
@@ -70,21 +73,19 @@ void EksConceptTest::destroyableTest()
     QCOMPARE(DestroyTest::dtor, 0);
 
     Object<Destroyable> d;
-    d.init<DestroyTest, DestroyableHelpers::Copied>();
-    d.assign(DestroyTest());
+    d.init<DestroyTest, Destroyable::Default>(DestroyTest());
 
     QCOMPARE(DestroyTest::ctor, 2);
     QCOMPARE(DestroyTest::copy, 1);
     QCOMPARE(DestroyTest::dtor, 1);
 
-    Object<Destroyable> d2;
-    d2.init<DestroyTest, DestroyableHelpers::Referenced>();
+    Object<Referenced> d2;
 
     QCOMPARE(DestroyTest::ctor, 2);
     QCOMPARE(DestroyTest::copy, 1);
     QCOMPARE(DestroyTest::dtor, 1);
 
-    d2.assign(a);
+    d2.init<DestroyTest, Referenced::Default>(a);
 
     QCOMPARE(DestroyTest::ctor, 2);
     QCOMPARE(DestroyTest::copy, 1);
@@ -116,18 +117,15 @@ void EksConceptTest::destroyableCopyTest()
 
     {
     Object<Destroyable> d;
-    d.init<DestroyTest, DestroyableHelpers::Copied>();
-    d.assign(DestroyTest());
+    d.init<DestroyTest, Destroyable::Default>(DestroyTest());
 
     QCOMPARE(DestroyTest::ctor, 1);
     QCOMPARE(DestroyTest::copy, 1);
     QCOMPARE(DestroyTest::dtor, 1);
 
-    Object<Destroyable> d2;
-    d2.init<DestroyTest, DestroyableHelpers::Referenced>();
+    Object<Referenced> d2;
 
     Object<Destroyable> d3;
-    d3.init<DestroyTest, DestroyableHelpers::Copied>();
 
     DestroyTest a;
 
@@ -135,20 +133,20 @@ void EksConceptTest::destroyableCopyTest()
     QCOMPARE(DestroyTest::copy, 1);
     QCOMPARE(DestroyTest::dtor, 1);
 
-    d2.assign(a);
-    QCOMPARE(d2.object(), &a);
+    d2.init<DestroyTest, Referenced::Default>(a);
+    QCOMPARE(d2.object().as<void>(), &a);
     QCOMPARE(DestroyTest::ctor, 2);
     QCOMPARE(DestroyTest::copy, 1);
     QCOMPARE(DestroyTest::dtor, 1);
 
-    d2.assign(d);
-    QCOMPARE(d2.object(), d.object());
+    d2.init<DestroyTest, Referenced::Default>(*d.object().as<DestroyTest>());
+    QCOMPARE(d2.object().as<void>(), d.object().as<void>());
     QCOMPARE(DestroyTest::ctor, 2);
     QCOMPARE(DestroyTest::copy, 1);
     QCOMPARE(DestroyTest::dtor, 1);
 
-    d3.assign(d);
-    QVERIFY(d3.object() != d.object());
+    d3.init<DestroyTest, Destroyable::Default>(d);
+    QVERIFY(d3.object().as<void>() != d.object().as<void>());
     QCOMPARE(DestroyTest::ctor, 2);
     QCOMPARE(DestroyTest::copy, 2);
     QCOMPARE(DestroyTest::dtor, 1);
@@ -181,7 +179,7 @@ void EksConceptTest::iterableTest()
 
   intQ << 0 << 1 << 2 << 3 << 4;
 
-  auto checkVector = [](const Object<Destroyable, Iterable<int>::Trait> &i)
+  auto checkVector = [](const Object<Referenced, Iterable<int>> &i)
     {
     auto begin = i.begin();
     auto end = i.end();
@@ -195,17 +193,14 @@ void EksConceptTest::iterableTest()
     QCOMPARE(begin, end);
     };
 
-  Object<Destroyable, Iterable<int>::Trait> i;
-  i.init<decltype(intV), DestroyableHelpers::Referenced, Iterable<int>::StdInterface>();
-  i.assign(intV);
+  Object<Referenced, Iterable<int>> i;
+  i.init<decltype(intV), Referenced::Default, Iterable<int>::StdInterface>(intV);
   checkVector(i);
 
-  i.init<decltype(intQ), DestroyableHelpers::Referenced, Iterable<int>::StdInterface>();
-  i.assign(intQ);
+  i.init<decltype(intQ), Referenced::Default, Iterable<int>::StdInterface>(intQ);
   checkVector(i);
 
-  i.init<decltype(intL), DestroyableHelpers::Referenced, Iterable<int>::StdInterface>();
-  i.assign(intL);
+  i.init<decltype(intL), Referenced::Default, Iterable<int>::StdInterface>(intL);
   checkVector(i);
   }
 
@@ -224,7 +219,7 @@ void EksConceptTest::indexableTest()
 
   intQ << 0 << 1 << 2 << 3 << 4;
 
-  auto checkVector = [](const Object<Destroyable, Iterable<int>::Trait, Indexable<int>::Trait> &i)
+  auto checkVector = [](const Object<Referenced, Iterable<int>, Indexable<int>> &i)
     {
     auto size = i.size();
     QCOMPARE(size, 5UL);
@@ -236,14 +231,23 @@ void EksConceptTest::indexableTest()
     QCOMPARE(i[4], 4);
     };
 
-  Object<Destroyable, Iterable<int>::Trait, Indexable<int>::Trait> i;
-  i.init<decltype(intV), DestroyableHelpers::Referenced, Iterable<int>::StdInterface, Indexable<int>::StdInterface>();
-  i.assign(intV);
+  Object<Referenced, Iterable<int>, Indexable<int>> i;
+  i.init<decltype(intV), Referenced::Default, Iterable<int>::StdInterface, Indexable<int>::StdInterface>(intV);
   checkVector(i);
 
-  i.init<decltype(intQ), DestroyableHelpers::Referenced, Iterable<int>::StdInterface, Indexable<int>::StdInterface>();
-  i.assign(intQ);
+  i.init<decltype(intQ), Referenced::Default, Iterable<int>::StdInterface, Indexable<int>::StdInterface>(intQ);
   checkVector(i);
+  }
+
+void EksConceptTest::defaultTraitsTest()
+  {
+  using namespace Eks::Trait;
+
+  Object<Destroyable, Iterable<float>> a;
+  }
+
+void EksConceptTest::customTest()
+  {
   }
 
 QTEST_APPLESS_MAIN(EksConceptTest)

@@ -7,7 +7,7 @@ namespace Eks
 namespace Trait
 {
 
-class Destroyable
+class Referenced
   {
 public:
   template <typename Derived> class Trait
@@ -19,27 +19,24 @@ public:
         {
         void (*assign)(detail::PrivateData *ths, const detail::ConstObjectWrapper &obj);
         void (*destroy)(detail::PrivateData *ths);
-        } destroy;
+        } referenced;
 
-      X_TRAIT_FUNCTION_IMPL(destroy, assign, destroy);
+      X_TRAIT_FUNCTION_IMPL(referenced, assign, destroy);
       };
 
     X_TRAIT_IMPL
 
-    struct Wrapper
-      {
-      void *data;
-      };
-
   public:
     detail::ConstObjectWrapper object() const
       {
-      return const_cast<Trait<Derived>*>(this)->data()->template data<Wrapper>();
+      detail::PrivateData* d = const_cast<Trait<Derived>*>(this)->data();
+      return *d->data<void*>();
       }
 
     detail::ObjectWrapper object()
       {
-      return data()->template data<Wrapper>();
+      detail::PrivateData* d = data();
+      return *d->data<void*>();
       }
 
     void clear()
@@ -47,27 +44,27 @@ public:
       auto d = data();
       if(d->isValid())
         {
-        functions()->destroy.destroy(d);
+        functions()->referenced.destroy(d);
         }
       }
-
   protected:
     void assignObject(const Derived &t)
       {
       clear();
 
-      functions()->destroy.assign(data(), t.object());
+      functions()->referenced.assign(data(), t.object());
       }
 
     template <typename T> void assign(const T &t)
       {
       clear();
 
-      functions()->destroy.assign(data(), &t);
+      functions()->referenced.assign(data(), &t);
       }
+
     };
 
-  struct Default
+  struct Copied
     {
     template <typename T>
         static void assign(detail::PrivateData *ths, const detail::ConstObjectWrapper &t)
@@ -85,6 +82,34 @@ public:
         static void destroy(detail::PrivateData *ths)
       {
       ths->destroy<T>();
+      }
+    };
+
+  struct Default
+    {
+    template <typename T>
+        static void *object(detail::PrivateData *ths)
+      {
+      return *ths->data<T*>();
+      }
+
+    template <typename T>
+        static void assign(detail::PrivateData *ths, const detail::ConstObjectWrapper &t)
+      {
+      ths->create<T*>(const_cast<T *>(t.as<T>()));
+      }
+
+    template <typename T>
+        static void copy(detail::PrivateData *ths, const detail::PrivateData *src)
+      {
+      const T *srcD = *src->data<T*>();
+      ths->create<T*>(const_cast<T *>(srcD));
+      }
+
+    template <typename T>
+        static void destroy(detail::PrivateData *ths)
+      {
+      ths->destroy<T*>();
       }
     };
   };

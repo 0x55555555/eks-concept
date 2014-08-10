@@ -30,6 +30,7 @@
 			buildPhases = (
 			);
 			buildToolPath = /Applications/Qt/5.3.1/5.3/clang_64/bin/qmake;
+			buildWorkingDirectory = /Volumes/User/Eks/EksCore/testProject;
 			dependencies = (
 			);
 			name = qmake;
