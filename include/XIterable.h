@@ -63,6 +63,11 @@ public:
         return _derived->functions()->iterable.get(_derived->object(), const_cast<IteratorData *>(&_data));
         }
 
+      bool operator!=(const ConstIterator &it) const
+        {
+        return !(_derived->functions()->iterable.equal(_derived->object(), &_data, &it._data));
+        }
+
       bool operator==(const ConstIterator &it) const
         {
         return _derived->functions()->iterable.equal(_derived->object(), &_data, &it._data);
